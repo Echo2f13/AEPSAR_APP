@@ -1,6 +1,6 @@
 {
-    "name": "test_app",
-    "short_name": "test_app",
+    "name": "sas_flutter",
+    "short_name": "sas_flutter",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
