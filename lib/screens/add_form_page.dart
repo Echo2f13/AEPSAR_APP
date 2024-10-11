@@ -120,7 +120,8 @@ class _MyWidgetState extends State<FormPage> {
       "blood-grp": bg,
     };
 
-    //Submit data to the server
+    //Submit data to the server after deleting the current data
+    deleteList();
     final url = 'http://172.17.99.78:3000/items';
     final uri = Uri.parse(url);
     final response = await http.post(
@@ -169,5 +170,13 @@ class _MyWidgetState extends State<FormPage> {
       backgroundColor: Colors.red,
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  //To delete the list before we add this customer's details
+  Future<void> deleteList() async {
+    final durl = 'http://172.17.99.78:3000/items';
+    final duri = Uri.parse(durl);
+    final response = await http.delete(duri);
+    print(response.statusCode);
   }
 }
