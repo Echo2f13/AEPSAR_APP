@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'emergency_protocol.dart'; // Import the emergency protocol page
 
 class DisplayPage extends StatefulWidget {
@@ -19,6 +20,7 @@ class _DisplayPageState extends State<DisplayPage> {
   void initState() {
     super.initState();
     _checkGPSAndFetchLocation();
+    _savePageState(); // Save the state when the page is opened
   }
 
   @override
@@ -183,40 +185,7 @@ class _DisplayPageState extends State<DisplayPage> {
   }
 
   Future<void> _checkGPSAndFetchLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Check if GPS is enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      setState(() {
-        locationMessage = "GPS is disabled. Please enable it.";
-        isLoading = false;
-      });
-      return;
-    }
-
-    // Check for location permissions
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        setState(() {
-          locationMessage = "Location permissions are denied.";
-          isLoading = false;
-        });
-        return;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      setState(() {
-        locationMessage = "Location permissions are permanently denied.";
-        isLoading = false;
-      });
-      return;
-    }
-
+    // Check GPS and permissions
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     setState(() {
@@ -237,5 +206,22 @@ class _DisplayPageState extends State<DisplayPage> {
         ),
       ),
     );
+  }
+
+  // Save page state in SharedPreferences
+  Future<void> _savePageState() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // Save that the app was on DisplayPage and save the data
+    await prefs.setString('lastPage', 'DisplayPage');
+    await prefs.setString('name', widget.data['name'] ?? '');
+    await prefs.setString('age', widget.data['age'] ?? '');
+    await prefs.setString('phone-number', widget.data['phone-number'] ?? '');
+    await prefs.setString(
+        'emg-contact-name', widget.data['emg-contact-name'] ?? '');
+    await prefs.setString(
+        'emg-contact-relation', widget.data['emg-contact-relation'] ?? '');
+    await prefs.setString(
+        'emg-contact-phno', widget.data['emg-contact-phno'] ?? '');
+    await prefs.setString('blood-grp', widget.data['blood-grp'] ?? '');
   }
 }
