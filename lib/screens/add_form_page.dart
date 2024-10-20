@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:sas_flutter/screens/display_page.dart';
+import 'package:sas_flutter/screens/temp_disp.dart';
 import 'dart:convert';
 
 class FormPage extends StatefulWidget {
@@ -99,9 +100,10 @@ class _MyWidgetState extends State<FormPage> {
 
   Future<void> sumbitData() async {
     //Get data from form
+    //UNDO the comments incase we decide to use localhost server
     final id = 1;
     final name = nameController.text;
-    final age = int.tryParse(ageController.text);
+    final age = ageController.text;
     final phno = phnoController.text;
     final add = addressController.text;
     final ecn = emgnameController.text;
@@ -119,10 +121,20 @@ class _MyWidgetState extends State<FormPage> {
       "emg-contact-phno": ecno,
       "blood-grp": bg,
     };
+    final formData = {
+      'name': nameController.text,
+      'age': ageController.text,
+      'phone-number': phnoController.text,
+      'address': addressController.text,
+      'emg-contact-name': emgnameController.text,
+      'emg-contact-relation': emgrelationController.text,
+      'emg-contact-phno': emgphnoController.text,
+      'blood-grp': bloodgroupController.text,
+    };
 
     //Submit data to the server after deleting the current data
     deleteList();
-    final url = 'http://172.17.99.78:3000/items';
+    final url = 'http://192.168.197.39:3000/items';
     final uri = Uri.parse(url);
     final response = await http.post(
       uri,
@@ -138,7 +150,7 @@ class _MyWidgetState extends State<FormPage> {
       //Go back to home page
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => DisplayPage()),
+        MaterialPageRoute(builder: (context) => DisplayPage(data: formData)),
         (Route<dynamic> route) => false,
       );
     } else {
@@ -146,6 +158,14 @@ class _MyWidgetState extends State<FormPage> {
       print('Error-Creation Failed');
       print(response.body);
     }
+
+    //Uncomment incase we dont use localhost
+    /*Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DisplayPage(data: formData),
+      ),
+    );*/
   }
 
   void showSuccessMessage(String message) {
@@ -174,7 +194,7 @@ class _MyWidgetState extends State<FormPage> {
 
   //To delete the list before we add this customer's details
   Future<void> deleteList() async {
-    final durl = 'http://172.17.99.78:3000/items';
+    final durl = 'http://192.168.197.39:3000/alldelete';
     final duri = Uri.parse(durl);
     final response = await http.delete(duri);
     print(response.statusCode);
