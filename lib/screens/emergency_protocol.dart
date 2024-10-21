@@ -1,8 +1,8 @@
-//Emergency Protocol
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class EmergencyProtocolPage extends StatefulWidget {
   final Map<String, String> data;
@@ -27,7 +27,7 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
     _captureMultipleImages(); // Automatically capture 5 images
   }
 
-  // Function to capture 5 images sequentially
+  // Function to capture 4 images sequentially
   Future<void> _captureMultipleImages() async {
     for (int i = 0; i < 4; i++) {
       await _openCamera();
@@ -44,6 +44,54 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
       setState(() {
         _imageFiles.add(File(pickedFile.path)); // Add each image to the list
       });
+
+      // Send data after capturing each image
+      await _sendData();
+    }
+  }
+
+  // Function to send data to the API
+  Future<void> _sendData() async {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('http://192.168.197.39:3000/emergencyProtocol'),
+    );
+
+    // Add text fields
+    request.fields['name'] = widget.data['name'] ?? 'Unknown';
+    request.fields['phone-number'] = widget.data['phone-number'] ?? 'N/A';
+    request.fields['emg-contact-phno'] =
+        widget.data['emg-contact-phno'] ?? 'N/A';
+    request.fields['blood-grp'] = widget.data['blood-grp'] ?? 'N/A';
+    request.fields['location'] = widget.location;
+
+    // Add images
+    for (var imageFile in _imageFiles) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'images', // This key can be used in your API to retrieve the images
+        imageFile.path,
+      ));
+    }
+
+    // Send the request
+    try {
+      final response = await request.send();
+      if (response.statusCode == 200) {
+        // Handle successful response
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Data sent successfully!')),
+        );
+      } else {
+        // Handle error response
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to send data.')),
+        );
+      }
+    } catch (e) {
+      // Handle exception
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occurred.')),
+      );
     }
   }
 
@@ -150,6 +198,8 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
               ),
               const SizedBox(height: 15),
               _buildImageGrid(), // Show all captured images
+
+              const SizedBox(height: 30),
             ],
           ),
         ),

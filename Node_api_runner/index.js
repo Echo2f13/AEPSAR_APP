@@ -81,6 +81,12 @@ app.put('/items/:id', (req, res) => {
   }
 });
 
+// DELETE: Remove all items
+app.delete('/alldelete', (req, res) => {
+  items = [];
+  res.json({ message: 'All items have been deleted' });
+});
+
 // DELETE: Remove an item by ID
 app.delete('/items/:id', (req, res) => {
   const itemExists = items.some(i => i.id === parseInt(req.params.id));
@@ -92,11 +98,6 @@ app.delete('/items/:id', (req, res) => {
   }
 });
 
-// DELETE: Remove all items
-app.delete('/items/all', (req, res) => {
-  items = [];
-  res.json({ message: 'All items have been deleted' });
-});
 
 // Start the server
 const PORT = process.env.PORT || 3000;

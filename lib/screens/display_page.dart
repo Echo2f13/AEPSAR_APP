@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'emergency_protocol.dart'; // Import the emergency protocol page
+import 'add_form_page.dart'; // Import your FormPage here
 
 class DisplayPage extends StatefulWidget {
   final Map<String, String> data;
@@ -39,75 +40,96 @@ class _DisplayPageState extends State<DisplayPage> {
         backgroundColor: const Color(0xFF78BEF7),
         automaticallyImplyLeading: false,
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Information Container
-                  _buildInfoContainer(),
-                  const SizedBox(height: 20),
-                  // Location Information
-                  const Text(
-                    'Current Location:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE1F5FE),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: const Color(0xFF0288D1),
-                        width: 2,
+      body: Stack(
+        children: [
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Information Container
+                      _buildInfoContainer(),
+                      const SizedBox(height: 20),
+                      // Location Information
+                      const Text(
+                        'Current Location:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      locationMessage.isNotEmpty
-                          ? locationMessage
-                          : 'Fetching location...',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Color(0xFF007BB6),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  // Emergency Button
-                  Center(
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          _handleEmergency();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE1F5FE),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: const Color(0xFF0288D1),
+                            width: 2,
                           ),
                         ),
-                        child: const Text(
-                          'EMERGENCY!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                        child: Text(
+                          locationMessage.isNotEmpty
+                              ? locationMessage
+                              : 'Fetching location...',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF007BB6),
                           ),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 30),
+                      // Emergency Button
+                      Center(
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _handleEmergency();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'EMERGENCY!',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+          // Edit Button
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton(
+              onPressed: () {
+                // Navigate to FormPage
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FormPage()),
+                );
+              },
+              child: const Icon(Icons.edit),
+              mini: true, // Make the button smaller
+              backgroundColor: const Color(0xFF78BEF7), // Background color
             ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -139,16 +161,13 @@ class _DisplayPageState extends State<DisplayPage> {
           _buildTextRow('Phone Number:', widget.data['phone-number'] ?? 'N/A'),
           const Divider(color: Colors.grey),
           const SizedBox(height: 10),
-          _buildTextRow('Emergency Contact Name:',
-              widget.data['emg-contact-name'] ?? 'N/A'),
+          _buildTextRow('Emergency Contact Name:', widget.data['emg-contact-name'] ?? 'N/A'),
           const Divider(color: Colors.grey),
           const SizedBox(height: 10),
-          _buildTextRow(
-              'Relation:', widget.data['emg-contact-relation'] ?? 'N/A'),
+          _buildTextRow('Relation:', widget.data['emg-contact-relation'] ?? 'N/A'),
           const Divider(color: Colors.grey),
           const SizedBox(height: 10),
-          _buildTextRow('Emergency Contact Phone:',
-              widget.data['emg-contact-phno'] ?? 'N/A'),
+          _buildTextRow('Emergency Contact Phone:', widget.data['emg-contact-phno'] ?? 'N/A'),
           const Divider(color: Colors.grey),
           const SizedBox(height: 10),
           _buildTextRow('Blood Group:', widget.data['blood-grp'] ?? 'N/A'),
@@ -216,12 +235,9 @@ class _DisplayPageState extends State<DisplayPage> {
     await prefs.setString('name', widget.data['name'] ?? '');
     await prefs.setString('age', widget.data['age'] ?? '');
     await prefs.setString('phone-number', widget.data['phone-number'] ?? '');
-    await prefs.setString(
-        'emg-contact-name', widget.data['emg-contact-name'] ?? '');
-    await prefs.setString(
-        'emg-contact-relation', widget.data['emg-contact-relation'] ?? '');
-    await prefs.setString(
-        'emg-contact-phno', widget.data['emg-contact-phno'] ?? '');
+    await prefs.setString('emg-contact-name', widget.data['emg-contact-name'] ?? '');
+    await prefs.setString('emg-contact-relation', widget.data['emg-contact-relation'] ?? '');
+    await prefs.setString('emg-contact-phno', widget.data['emg-contact-phno'] ?? '');
     await prefs.setString('blood-grp', widget.data['blood-grp'] ?? '');
   }
 }
