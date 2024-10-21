@@ -1,10 +1,29 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 app.use(bodyParser.json());
 
-// In-memory "database"
+// Set up multer for handling file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // Directory to save uploaded images
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // Append timestamp to filename
+  },
+});
+const upload = multer({ storage });
+
+// Create uploads directory if it doesn't exist
+if (!fs.existsSync('uploads')) {
+  fs.mkdirSync('uploads');
+}
+
+// In-memory "database" for items
 let items = [
   {
     id: 1,
@@ -27,6 +46,9 @@ let items = [
     'blood-grp': 'B-',
   }
 ];
+
+// In-memory "database" for emergency protocol submissions
+let emergencyProtocols = [];
 
 // Root route to provide a welcome message
 app.get('/', (req, res) => {
@@ -64,6 +86,12 @@ app.post('/items', (req, res) => {
   res.status(201).json(newItem);
 });
 
+// DELETE: Remove all items
+app.delete('/alldelete', (req, res) => {
+  items = [];
+  res.json({ message: 'All items have been deleted' });
+});
+
 // PUT: Update an existing item
 app.put('/items/:id', (req, res) => {
   const item = items.find(i => i.id === parseInt(req.params.id));
@@ -81,12 +109,6 @@ app.put('/items/:id', (req, res) => {
   }
 });
 
-// DELETE: Remove all items
-app.delete('/alldelete', (req, res) => {
-  items = [];
-  res.json({ message: 'All items have been deleted' });
-});
-
 // DELETE: Remove an item by ID
 app.delete('/items/:id', (req, res) => {
   const itemExists = items.some(i => i.id === parseInt(req.params.id));
@@ -98,6 +120,43 @@ app.delete('/items/:id', (req, res) => {
   }
 });
 
+// POST: API for emergency protocol
+app.post('/emergencyProtocol', upload.array('images'), (req, res) => {
+  const { name, 'phone-number': phoneNumber, 'emg-contact-phno': emergencyContact, 'blood-grp': bloodGroup, location } = req.body;
+
+  console.log('Received Data:', {
+    name,
+    phoneNumber,
+    emergencyContact,
+    bloodGroup,
+    location,
+  });
+
+  // Log received images
+  if (req.files) {
+    req.files.forEach((file) => {
+      console.log('Received Image:', file.filename);
+    });
+  }
+
+  // Store received emergency protocol data
+  const emergencyData = {
+    name,
+    phoneNumber,
+    emergencyContact,
+    bloodGroup,
+    location,
+    images: req.files.map(file => file.filename), // Store filenames of uploaded images
+  };
+  emergencyProtocols.push(emergencyData); // Add data to the array
+
+  res.status(200).json({ message: 'Data received successfully!' });
+});
+
+// GET: Retrieve all emergency protocol submissions
+app.get('/emergencyProtocol', (req, res) => {
+  res.json(emergencyProtocols); // Send the array of emergency protocol data
+});
 
 // Start the server
 const PORT = process.env.PORT || 3000;
