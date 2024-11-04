@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'emergency_protocol.dart'; // Import the emergency protocol page
+import 'temp_emg.dart';
 import 'add_form_page.dart'; // Import your FormPage here
 
 class DisplayPage extends StatefulWidget {
@@ -161,13 +162,16 @@ class _DisplayPageState extends State<DisplayPage> {
           _buildTextRow('Phone Number:', widget.data['phone-number'] ?? 'N/A'),
           const Divider(color: Colors.grey),
           const SizedBox(height: 10),
-          _buildTextRow('Emergency Contact Name:', widget.data['emg-contact-name'] ?? 'N/A'),
+          _buildTextRow('Emergency Contact Name:',
+              widget.data['emg-contact-name'] ?? 'N/A'),
           const Divider(color: Colors.grey),
           const SizedBox(height: 10),
-          _buildTextRow('Relation:', widget.data['emg-contact-relation'] ?? 'N/A'),
+          _buildTextRow(
+              'Relation:', widget.data['emg-contact-relation'] ?? 'N/A'),
           const Divider(color: Colors.grey),
           const SizedBox(height: 10),
-          _buildTextRow('Emergency Contact Phone:', widget.data['emg-contact-phno'] ?? 'N/A'),
+          _buildTextRow('Emergency Contact Phone:',
+              widget.data['emg-contact-phno'] ?? 'N/A'),
           const Divider(color: Colors.grey),
           const SizedBox(height: 10),
           _buildTextRow('Blood Group:', widget.data['blood-grp'] ?? 'N/A'),
@@ -219,7 +223,7 @@ class _DisplayPageState extends State<DisplayPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EmergencyProtocolPage(
+        builder: (context) => EmergencyProtocolPageTemp(
           data: widget.data,
           location: locationMessage,
         ),
@@ -235,9 +239,12 @@ class _DisplayPageState extends State<DisplayPage> {
     await prefs.setString('name', widget.data['name'] ?? '');
     await prefs.setString('age', widget.data['age'] ?? '');
     await prefs.setString('phone-number', widget.data['phone-number'] ?? '');
-    await prefs.setString('emg-contact-name', widget.data['emg-contact-name'] ?? '');
-    await prefs.setString('emg-contact-relation', widget.data['emg-contact-relation'] ?? '');
-    await prefs.setString('emg-contact-phno', widget.data['emg-contact-phno'] ?? '');
+    await prefs.setString(
+        'emg-contact-name', widget.data['emg-contact-name'] ?? '');
+    await prefs.setString(
+        'emg-contact-relation', widget.data['emg-contact-relation'] ?? '');
+    await prefs.setString(
+        'emg-contact-phno', widget.data['emg-contact-phno'] ?? '');
     await prefs.setString('blood-grp', widget.data['blood-grp'] ?? '');
   }
 }

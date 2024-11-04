@@ -23,6 +23,9 @@ if (!fs.existsSync('uploads')) {
   fs.mkdirSync('uploads');
 }
 
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // In-memory "database" for items
 let items = [
   {
@@ -49,6 +52,7 @@ let items = [
 
 // In-memory "database" for emergency protocol submissions
 let emergencyProtocols = [];
+let emergencyProtocolIdCounter = 1; // Counter for generating unique IDs
 
 // Root route to provide a welcome message
 app.get('/', (req, res) => {
@@ -139,23 +143,45 @@ app.post('/emergencyProtocol', upload.array('images'), (req, res) => {
     });
   }
 
-  // Store received emergency protocol data
+  // Store received emergency protocol data with an ID
   const emergencyData = {
+    id: emergencyProtocolIdCounter++, // Increment and assign ID
     name,
     phoneNumber,
     emergencyContact,
     bloodGroup,
     location,
-    images: req.files.map(file => file.filename), // Store filenames of uploaded images
+    images: req.files.map(file => `/uploads/${file.filename}`), // Store URLs of uploaded images
   };
   emergencyProtocols.push(emergencyData); // Add data to the array
 
-  res.status(200).json({ message: 'Data received successfully!' });
+  res.status(200).json({ message: 'Data received successfully!', id: emergencyData.id });
 });
 
 // GET: Retrieve all emergency protocol submissions
 app.get('/emergencyProtocol', (req, res) => {
   res.json(emergencyProtocols); // Send the array of emergency protocol data
+});
+
+// DELETE: Remove an emergency protocol submission by ID
+app.delete('/emergencyProtocol/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+
+  // Filter the emergency protocols to remove those with the matching ID
+  const initialLength = emergencyProtocols.length;
+  emergencyProtocols = emergencyProtocols.filter(protocol => protocol.id !== id);
+
+  if (emergencyProtocols.length < initialLength) {
+    res.json({ message: `Emergency protocol entry with ID '${id}' has been deleted` });
+  } else {
+    res.status(404).json({ message: 'No emergency protocol entry found for the specified ID' });
+  }
+});
+
+// DELETE: Remove all emergency protocol submissions
+app.delete('/emergencyProtocol', (req, res) => {
+  emergencyProtocols = []; // Clear the array
+  res.json({ message: 'All emergency protocol entries have been deleted' });
 });
 
 // Start the server

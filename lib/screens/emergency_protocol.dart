@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
+import 'dart:async';
 import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class EmergencyProtocolPage extends StatefulWidget {
   final Map<String, String> data;
@@ -15,49 +16,82 @@ class EmergencyProtocolPage extends StatefulWidget {
   });
 
   @override
-  _EmergencyProtocolPageState createState() => _EmergencyProtocolPageState();
+  _EmergencyProtocolPageState createState() =>
+      _EmergencyProtocolPageState();
 }
 
 class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
-  List<File> _imageFiles = []; // List to store captured images
+  List<File> _imageFiles = [];
+  Timer? _timer;
+  int _imageLimit = 4;
+  int _captureIntervalSeconds = 3;
+  late CameraController _cameraController;
+  late Future<void> _initializeControllerFuture;
 
   @override
   void initState() {
     super.initState();
-    _captureMultipleImages(); // Automatically capture 5 images
+    _initializeCamera(); // Initialize the camera and start the capture
   }
 
-  // Function to capture 4 images sequentially
-  Future<void> _captureMultipleImages() async {
-    for (int i = 0; i < 4; i++) {
-      await _openCamera();
-    }
-  }
+  // Initialize the camera to start the automatic capture
+  Future<void> _initializeCamera() async {
+    final cameras = await availableCameras();
+    final backCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.back);
 
-  // Function to open the camera and capture one image
-  Future<void> _openCamera() async {
-    final pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.camera,
+    _cameraController = CameraController(
+      backCamera,
+      ResolutionPreset.medium,
     );
 
-    if (pickedFile != null) {
-      setState(() {
-        _imageFiles.add(File(pickedFile.path)); // Add each image to the list
-      });
+    _initializeControllerFuture = _cameraController.initialize();
+    _startTimedCapture();
+  }
 
-      // Send data after capturing each image
-      await _sendData();
+  // Start the timer for capturing images at intervals
+  void _startTimedCapture() {
+    _timer = Timer.periodic(
+      Duration(seconds: _captureIntervalSeconds),
+      (timer) async {
+        if (_imageFiles.length < _imageLimit) {
+          await _captureImage();
+        } else {
+          _timer?.cancel();
+          await _sendData(); // Send the data only after reaching the image limit
+        }
+      },
+    );
+  }
+
+  // Capture an image automatically
+  Future<void> _captureImage() async {
+    await _initializeControllerFuture;
+    final directory = await getTemporaryDirectory();
+    final path = '${directory.path}/${DateTime.now()}.png';
+
+    try {
+      // Capture the image and store it in the specified path
+      XFile picture = await _cameraController.takePicture();
+      await picture.saveTo(path);
+
+      setState(() {
+        _imageFiles.add(File(path));
+      });
+    } catch (e) {
+      /*ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Faled to capture image.')),
+      );*/
     }
   }
 
-  // Function to send data to the API
+  // Send the captured data to the API
   Future<void> _sendData() async {
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://192.168.197.39:3000/emergencyProtocol'),
+      Uri.parse('http://192.168.153.39:3000/emergencyProtocol'),
     );
 
-    // Add text fields
     request.fields['name'] = widget.data['name'] ?? 'Unknown';
     request.fields['phone-number'] = widget.data['phone-number'] ?? 'N/A';
     request.fields['emg-contact-phno'] =
@@ -65,34 +99,36 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
     request.fields['blood-grp'] = widget.data['blood-grp'] ?? 'N/A';
     request.fields['location'] = widget.location;
 
-    // Add images
     for (var imageFile in _imageFiles) {
       request.files.add(await http.MultipartFile.fromPath(
-        'images', // This key can be used in your API to retrieve the images
+        'images',
         imageFile.path,
       ));
     }
 
-    // Send the request
     try {
       final response = await request.send();
       if (response.statusCode == 200) {
-        // Handle successful response
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Data sent successfully!')),
         );
       } else {
-        // Handle error response
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to send data.')),
         );
       }
     } catch (e) {
-      // Handle exception
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('An error occurred.')),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _cameraController.dispose();
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -106,7 +142,7 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
           ),
         ),
         backgroundColor: Colors.redAccent,
-        automaticallyImplyLeading: false, // Remove the back button
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -114,7 +150,6 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Emergency Protocol Heading
               Center(
                 child: Column(
                   children: const [
@@ -140,8 +175,6 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
                 ),
               ),
               const SizedBox(height: 30),
-
-              // Form Details with Icon & Style
               _buildFormDetail(
                 icon: Icons.person,
                 label: 'Name:',
@@ -166,8 +199,6 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
                 value: widget.data['blood-grp'] ?? 'N/A',
               ),
               const SizedBox(height: 30),
-
-              // Location Details Section
               const Text(
                 'Location Details:',
                 style: TextStyle(
@@ -187,8 +218,6 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
                 ),
               ),
               const SizedBox(height: 30),
-
-              // Captured Images Section
               const Text(
                 'Captured Images:',
                 style: TextStyle(
@@ -197,8 +226,7 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
                 ),
               ),
               const SizedBox(height: 15),
-              _buildImageGrid(), // Show all captured images
-
+              _buildImageGrid(),
               const SizedBox(height: 30),
             ],
           ),
@@ -207,7 +235,6 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
     );
   }
 
-  // Widget to display form detail with an icon
   Widget _buildFormDetail({
     required IconData icon,
     required String label,
@@ -244,7 +271,6 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
     );
   }
 
-  // Function to display the images in a grid format
   Widget _buildImageGrid() {
     if (_imageFiles.isEmpty) {
       return const Text(
@@ -256,7 +282,7 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // 2 images per row
+          crossAxisCount: 2,
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
         ),
