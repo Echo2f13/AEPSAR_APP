@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 
 class EmergencyProtocolPage extends StatefulWidget {
-  final Map<String, String> data;
+  final Map<String, String> data; // Ensure this map includes the new fields
   final String location;
 
   const EmergencyProtocolPage({
@@ -16,8 +16,7 @@ class EmergencyProtocolPage extends StatefulWidget {
   });
 
   @override
-  _EmergencyProtocolPageState createState() =>
-      _EmergencyProtocolPageState();
+  _EmergencyProtocolPageState createState() => _EmergencyProtocolPageState();
 }
 
 class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
@@ -80,7 +79,7 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
       });
     } catch (e) {
       /*ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Faled to capture image.')),
+        const SnackBar(content: Text('Failed to capture image.')),
       );*/
     }
   }
@@ -89,11 +88,17 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
   Future<void> _sendData() async {
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://192.168.153.39:3000/emergencyProtocol'),
+      Uri.parse('http://192.168.41.39:3000/emergencyProtocol'),
     );
 
+    // Sending all required fields, including new ones
     request.fields['name'] = widget.data['name'] ?? 'Unknown';
+    request.fields['age'] = widget.data['age'] ?? 'N/A'; // New field
     request.fields['phone-number'] = widget.data['phone-number'] ?? 'N/A';
+    request.fields['emg-contact-name'] =
+        widget.data['emg-contact-name'] ?? 'N/A'; // New field
+    request.fields['emg-contact-relation'] =
+        widget.data['emg-contact-relation'] ?? 'N/A'; // New field
     request.fields['emg-contact-phno'] =
         widget.data['emg-contact-phno'] ?? 'N/A';
     request.fields['blood-grp'] = widget.data['blood-grp'] ?? 'N/A';
@@ -182,14 +187,33 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
               ),
               const SizedBox(height: 15),
               _buildFormDetail(
+                icon: Icons.calendar_today,
+                label: 'Age:',
+                value: widget.data['age'] ?? 'N/A', // New field
+              ),
+              const SizedBox(height: 15),
+              _buildFormDetail(
                 icon: Icons.phone,
                 label: 'Phone Number:',
                 value: widget.data['phone-number'] ?? 'N/A',
               ),
               const SizedBox(height: 15),
               _buildFormDetail(
+                icon: Icons.person_outline,
+                label: 'Emergency Contact Name:',
+                value: widget.data['emg-contact-name'] ?? 'N/A', // New field
+              ),
+              const SizedBox(height: 15),
+              _buildFormDetail(
+                icon: Icons.group,
+                label: 'Emergency Contact Relation:',
+                value:
+                    widget.data['emg-contact-relation'] ?? 'N/A', // New field
+              ),
+              const SizedBox(height: 15),
+              _buildFormDetail(
                 icon: Icons.contact_phone,
-                label: 'Emergency Contact:',
+                label: 'Emergency Contact Phone:',
                 value: widget.data['emg-contact-phno'] ?? 'N/A',
               ),
               const SizedBox(height: 15),
@@ -283,8 +307,7 @@ class _EmergencyProtocolPageState extends State<EmergencyProtocolPage> {
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
+          childAspectRatio: 1,
         ),
         itemCount: _imageFiles.length,
         itemBuilder: (context, index) {

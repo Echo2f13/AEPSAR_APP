@@ -134,7 +134,7 @@ class _MyWidgetState extends State<FormPage> {
 
     //Submit data to the server after deleting the current data
     deleteList();
-    final url = 'http://192.168.153.39:3000/items';
+    final url = 'http://192.168.41.39:3000/items';
     final uri = Uri.parse(url);
     final response = await http.post(
       uri,
@@ -194,7 +194,7 @@ class _MyWidgetState extends State<FormPage> {
 
   //To delete the list before we add this customer's details
   Future<void> deleteList() async {
-    final durl = 'http:/192.168.153.39:3000/alldelete';
+    final durl = 'http:/192.168.41.39:3000/alldelete';
     final duri = Uri.parse(durl);
     final response = await http.delete(duri);
     print(response.statusCode);

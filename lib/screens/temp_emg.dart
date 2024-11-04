@@ -111,7 +111,7 @@ class _EmergencyProtocolPageTempState extends State<EmergencyProtocolPageTemp> {
 
     var request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://192.168.153.39:3000/emergencyProtocol'),
+      Uri.parse('http://192.168.41.39:3000/emergencyProtocol'),
     );
 
     request.fields['name'] = widget.data['name'] ?? 'Unknown';

@@ -126,10 +126,22 @@ app.delete('/items/:id', (req, res) => {
 
 // POST: API for emergency protocol
 app.post('/emergencyProtocol', upload.array('images'), (req, res) => {
-  const { name, 'phone-number': phoneNumber, 'emg-contact-phno': emergencyContact, 'blood-grp': bloodGroup, location } = req.body;
+  const {
+    name,
+    age, // Newly added field
+    'phone-number': phoneNumber,
+    'emg-contact-name': emergencyContactName, // Newly added field
+    'emg-contact-relation': emergencyContactRelation, // Newly added field
+    'emg-contact-phno': emergencyContact,
+    'blood-grp': bloodGroup,
+    location,
+  } = req.body;
 
   console.log('Received Data:', {
     name,
+    age, // Log new field
+    emergencyContactName, // Log new field
+    emergencyContactRelation, // Log new field
     phoneNumber,
     emergencyContact,
     bloodGroup,
@@ -147,6 +159,9 @@ app.post('/emergencyProtocol', upload.array('images'), (req, res) => {
   const emergencyData = {
     id: emergencyProtocolIdCounter++, // Increment and assign ID
     name,
+    age, // Include the new field
+    emergencyContactName, // Include the new field
+    emergencyContactRelation, // Include the new field
     phoneNumber,
     emergencyContact,
     bloodGroup,
@@ -160,7 +175,19 @@ app.post('/emergencyProtocol', upload.array('images'), (req, res) => {
 
 // GET: Retrieve all emergency protocol submissions
 app.get('/emergencyProtocol', (req, res) => {
-  res.json(emergencyProtocols); // Send the array of emergency protocol data
+  // Send the array of emergency protocol data
+  res.json(emergencyProtocols.map(protocol => ({
+    id: protocol.id,
+    name: protocol.name,
+    age: protocol.age, // Include new field
+    'phone-number': protocol.phoneNumber,
+    'emg-contact-name': protocol.emergencyContactName, // Include new field
+    'emg-contact-relation': protocol.emergencyContactRelation, // Include new field
+    'emg-contact-phno': protocol.emergencyContact,
+    'blood-grp': protocol.bloodGroup,
+    location: protocol.location,
+    images: protocol.images,
+  })));
 });
 
 // DELETE: Remove an emergency protocol submission by ID
