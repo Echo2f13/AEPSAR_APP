@@ -128,10 +128,10 @@ app.delete('/items/:id', (req, res) => {
 app.post('/emergencyProtocol', upload.array('images'), (req, res) => {
   const {
     name,
-    age, // Newly added field
+    age,
     'phone-number': phoneNumber,
-    'emg-contact-name': emergencyContactName, // Newly added field
-    'emg-contact-relation': emergencyContactRelation, // Newly added field
+    'emg-contact-name': emergencyContactName,
+    'emg-contact-relation': emergencyContactRelation,
     'emg-contact-phno': emergencyContact,
     'blood-grp': bloodGroup,
     location,
@@ -139,9 +139,9 @@ app.post('/emergencyProtocol', upload.array('images'), (req, res) => {
 
   console.log('Received Data:', {
     name,
-    age, // Log new field
-    emergencyContactName, // Log new field
-    emergencyContactRelation, // Log new field
+    age,
+    emergencyContactName,
+    emergencyContactRelation,
     phoneNumber,
     emergencyContact,
     bloodGroup,
@@ -159,9 +159,9 @@ app.post('/emergencyProtocol', upload.array('images'), (req, res) => {
   const emergencyData = {
     id: emergencyProtocolIdCounter++, // Increment and assign ID
     name,
-    age, // Include the new field
-    emergencyContactName, // Include the new field
-    emergencyContactRelation, // Include the new field
+    age,
+    emergencyContactName,
+    emergencyContactRelation,
     phoneNumber,
     emergencyContact,
     bloodGroup,
@@ -175,26 +175,47 @@ app.post('/emergencyProtocol', upload.array('images'), (req, res) => {
 
 // GET: Retrieve all emergency protocol submissions
 app.get('/emergencyProtocol', (req, res) => {
-  // Send the array of emergency protocol data
   res.json(emergencyProtocols.map(protocol => ({
     id: protocol.id,
     name: protocol.name,
-    age: protocol.age, // Include new field
-    'phone-number': protocol.phoneNumber,
-    'emg-contact-name': protocol.emergencyContactName, // Include new field
-    'emg-contact-relation': protocol.emergencyContactRelation, // Include new field
-    'emg-contact-phno': protocol.emergencyContact,
-    'blood-grp': protocol.bloodGroup,
+    age: protocol.age,
+    phone_number: protocol.phoneNumber,
+    emg_contact_name: protocol.emergencyContactName,
+    emg_contact_relation: protocol.emergencyContactRelation,
+    emg_contact_phno: protocol.emergencyContact,
+    blood_grp: protocol.bloodGroup,
     location: protocol.location,
     images: protocol.images,
   })));
+});
+
+// GET: Retrieve a specific emergency protocol submission by ID
+app.get('/emergencyProtocol/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const protocol = emergencyProtocols.find(p => p.id === id);
+  
+  if (protocol) {
+    res.json({
+      id: protocol.id,
+      name: protocol.name,
+      age: protocol.age,
+      phone_number: protocol.phoneNumber,
+      emg_contact_name: protocol.emergencyContactName,
+      emg_contact_relation: protocol.emergencyContactRelation,
+      emg_contact_phno: protocol.emergencyContact,
+      blood_grp: protocol.bloodGroup,
+      location: protocol.location,
+      images: protocol.images,
+    });
+  } else {
+    res.status(404).json({ message: 'Emergency protocol entry not found' });
+  }
 });
 
 // DELETE: Remove an emergency protocol submission by ID
 app.delete('/emergencyProtocol/:id', (req, res) => {
   const id = parseInt(req.params.id);
 
-  // Filter the emergency protocols to remove those with the matching ID
   const initialLength = emergencyProtocols.length;
   emergencyProtocols = emergencyProtocols.filter(protocol => protocol.id !== id);
 

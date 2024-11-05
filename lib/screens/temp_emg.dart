@@ -29,7 +29,8 @@ class _EmergencyProtocolPageTempState extends State<EmergencyProtocolPageTemp> {
   int _captureIntervalSeconds = 3; // Time interval for captures
   late CameraController _cameraController;
   late Future<void> _initializeControllerFuture;
-  CameraLensDirection _currentCamera = CameraLensDirection.back; // Start with back camera
+  CameraLensDirection _currentCamera =
+      CameraLensDirection.back; // Start with back camera
   bool _dataSent = false; // Flag to track if data has been sent
 
   @override
@@ -42,8 +43,7 @@ class _EmergencyProtocolPageTempState extends State<EmergencyProtocolPageTemp> {
   Future<void> _initializeCamera() async {
     final cameras = await availableCameras();
     _cameraController = CameraController(
-      cameras.firstWhere(
-          (camera) => camera.lensDirection == _currentCamera),
+      cameras.firstWhere((camera) => camera.lensDirection == _currentCamera),
       ResolutionPreset.medium,
     );
 
@@ -115,12 +115,16 @@ class _EmergencyProtocolPageTempState extends State<EmergencyProtocolPageTemp> {
     );
 
     request.fields['name'] = widget.data['name'] ?? 'Unknown';
+    request.fields['age'] = widget.data['age'] ?? 'Unknown';
     request.fields['phone-number'] = widget.data['phone-number'] ?? 'N/A';
     request.fields['emg-contact-phno'] =
         widget.data['emg-contact-phno'] ?? 'N/A';
+    request.fields['emg-contact-name'] =
+        widget.data['emg-contact-name'] ?? 'N/A';
+    request.fields['emg-contact-relation'] =
+        widget.data['emg-contact-relation'] ?? 'N/A';
     request.fields['blood-grp'] = widget.data['blood-grp'] ?? 'N/A';
     request.fields['location'] = widget.location;
-
     for (var imageFile in _imageFiles) {
       request.files.add(await http.MultipartFile.fromPath(
         'images',
@@ -322,3 +326,5 @@ class _EmergencyProtocolPageTempState extends State<EmergencyProtocolPageTemp> {
     }
   }
 }
+
+
